@@ -36,5 +36,9 @@ data = load_data()
 
 st.title("SOTH Trade App")
 
+min_year_filter, max_year_filter = st.slider("Year", 2023, 2050, (2023, 2027))
+
 st.subheader("Raw data")
-st.write(data)
+st.write(
+    data.loc[(data["Season"] >= min_year_filter) & (data["Season"] <= max_year_filter)]
+)

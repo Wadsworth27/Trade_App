@@ -89,6 +89,9 @@ class FrameBuilder:
         df["ownedBy.name"] = df["ownedBy.id"].apply(self.convert_id_to_name)
         df["originalOwner.id"] = df["originalOwner.id"].astype(int)
         df["lost"] = df["lost"].apply(lambda x: x == "True" or x == True)
+        df.sort_values(
+            by=["season", "ownedBy.id", "slot.round"], ignore_index=True, inplace=True
+        )
 
         return df
 
