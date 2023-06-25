@@ -96,4 +96,25 @@ pie_fig = px.pie(data_frame=pie_data, values="# of Picks", names="Pick Owner")
 st.plotly_chart(pie_fig, use_container_width=True)
 
 
-print(options)
+##### All pick view start
+def row_style(row):
+    if row["Lost"]:
+        return pd.Series("background-color: red", row.index)
+    else:
+        return pd.Series("", row.index)
+
+
+pick_owner = st.selectbox("Player Select", options=data["Original Owner"].unique())
+pick_view_data = working_data.copy()
+st.write("Owned Picks")
+st.dataframe(
+    working_data.query("`Pick Lost` == False and `Pick Owner` == @pick_owner")
+    .sort_values(by=["Season", "Pick Round"])
+    .reset_index(drop=True)
+)
+st.write("Lost Picks")
+st.dataframe(
+    working_data.query("`Pick Lost` == True and `Original Owner` == @pick_owner")
+    .sort_values(by=["Season", "Pick Round"])
+    .reset_index(drop=True)
+)
