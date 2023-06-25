@@ -70,17 +70,40 @@ bar_fig = px.bar(
     color="Pick Owner",
 )
 st.plotly_chart(bar_fig, use_container_width=True)
-# Scatter Plot Start
-scatter_data = (
+st.divider()
+####Value Subburst####
+st.header("Pick Values By Season")
+sunburst_data = (
     working_data[(~working_data["Pick Lost"]) & (working_data["Pick Round"] < 8)]
-    .groupby(["Season", "Pick Round", "Pick Owner"])
-    .count()
+    .groupby(["Season", "Pick Owner"])
+    .sum()["Pick Value"]
     .reset_index()
 )
-scatter_data.rename({"Original Owner": "# of Picks"}, axis=1, inplace=True)
+
+sunburst_fig = px.sunburst(
+    sunburst_data,
+    path=["Pick Owner", "Season"],
+    values="Pick Value",
+    height=1000,
+    hover_data="Pick Value",
+)
+st.plotly_chart(sunburst_fig, use_container_width=True)
+###### Value Scatter Plot Start ####
+
+scatter_data = (
+    working_data[(~working_data["Pick Lost"]) & (working_data["Pick Round"] < 8)]
+    .groupby(["Season", "Pick Owner"])
+    .sum()["Pick Value"]
+    .reset_index()
+)
+scatter_data.rename({"Original Owner": "Sum Of Pick Values"}, axis=1, inplace=True)
+scatter_fig = px.scatter(scatter_data, x="Season", y="Pick Owner", size="Pick Value")
+scatter_fig.update_xaxes(tickvals=scatter_data["Season"].unique())
+st.plotly_chart(scatter_fig)
 
 
 #####Pie Chart Start ####
+
 st.header("Picks By Round")
 round_select = st.slider("Round", 1, 8, 1)
 pie_data = (
@@ -91,6 +114,7 @@ pie_data = (
     .count()
     .reset_index()
 )
+
 pie_data.rename({"Original Owner": "# of Picks"}, axis=1, inplace=True)
 pie_fig = px.pie(data_frame=pie_data, values="# of Picks", names="Pick Owner")
 st.plotly_chart(pie_fig, use_container_width=True)

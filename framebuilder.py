@@ -32,12 +32,13 @@ class FrameBuilder:
         self.player_id_to_name = {v: k for k, v in self.name_to_player_ids.items()}
         # Get Picks from Fleaflicker
         self.get_current_picks()
+        self.min_season = min(self.current_pick_df["season"])
+        self.max_season = max(self.current_pick_df["season"])
         # Get csv of updated future picks if existing
         self.future_picks_df = future_pick_df
         if self.future_picks_df is not None:
-            max_round = max(self.current_pick_df["season"])
             self.future_picks_df = self.future_picks_df[
-                self.future_picks_df["season"] > max_round
+                self.future_picks_df["season"] > self.max_season
             ].copy()
         # Create final Dataframe
         self.create_all_picks_df()
@@ -81,6 +82,7 @@ class FrameBuilder:
                 "originalOwner.id",
                 "originalOwner.name",
                 "slot.round",
+                "pick_value",
             ]
         ].copy()
         df = df.query("`slot.round` <11")
@@ -142,13 +144,41 @@ class FrameBuilder:
             )
             json_response = response.json()["picks"]
             df = pd.json_normalize(json_response)
+            df["pick_value"] = 0
             df = self.format_dataframe(df)
             self.current_pick_df = pd.concat([self.current_pick_df, df])
+
+    def score_pick(self, player, pick_round, season):
+        player_values = {
+            "Steve": 1.01,
+            "Ryan": 0.97,
+            "Jimmy": 0.99,
+            "Sam": 1.03,
+            "Jake B": 1.04,
+            "Kooch": 1.02,
+            "Ethan": 0.98,
+            "Jake M": 1.0,
+        }
+        round_values = {1: 1000, 2: 350, 3: 125, 4: 50, 5: 25, 6: 10}
+        # Calculate value based on owners most recent finish position and a 10% per year discount rate
+        pick_value = (round_values.get(pick_round, 1) * player_values.get(player)) * (
+            0.90 ** (self.min_season - season)
+        )
+        return round(pick_value, 2)
+
+    def score_all_picks(self):
+        self.all_picks_df["pick_value"] = self.all_picks_df.apply(
+            lambda x: self.score_pick(
+                x["originalOwner.name"], x["slot.round"], x["season"]
+            ),
+            axis=1,
+        )
 
     def create_all_picks_df(self):
         self.all_picks_df = self.format_dataframe(
             pd.concat([self.current_pick_df, self.future_picks_df])
         )
+        self.score_all_picks()
 
     def return_user_facing_df(self):
         user_df = self.all_picks_df.copy()
@@ -160,6 +190,7 @@ class FrameBuilder:
                 "ownedBy.name": "Pick Owner",
                 "originalOwner.name": "Original Owner",
                 "slot.round": "Pick Round",
+                "pick_value": "Pick Value",
             },
             axis=1,
             inplace=True,
@@ -173,5 +204,6 @@ class FrameBuilder:
                 "Original Owner",
                 "Pick Traded",
                 "Pick Lost",
+                "Pick Value",
             ]
         ]
