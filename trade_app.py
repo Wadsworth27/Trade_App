@@ -37,7 +37,7 @@ data = load_data()
 
 st.title("Chad's SOTH Trade App")
 
-min_year_filter, max_year_filter = st.slider("Year", 2023, 2050, (2023, 2027))
+
 with st.sidebar:
     st.header("Player Select")
     options = st.multiselect(
@@ -45,14 +45,16 @@ with st.sidebar:
         options=data["Original Owner"].unique(),
         default=data["Original Owner"].unique(),
     )
-
-st.subheader("Raw data")
+    st.header("Year Select")
+    min_year_filter, max_year_filter = st.slider("Year", 2023, 2030, (2023, 2025))
+st.subheader("All Picks in Range")
 working_data = data.loc[
     (data["Season"] >= min_year_filter)
     & (data["Season"] <= max_year_filter)
     & (data["Pick Owner"].isin(options))
 ]
 # st.write(working_data)
+
 # Display Bar Graph of picks in range
 bar_data = (
     working_data[(~working_data["Pick Lost"]) & (working_data["Pick Round"] < 8)]
@@ -61,14 +63,37 @@ bar_data = (
     .reset_index()
 )
 bar_data.rename({"Original Owner": "# of Picks"}, axis=1, inplace=True)
-fig = px.bar(
+bar_fig = px.bar(
     bar_data,
     x="Pick Round",
     y="# of Picks",
     color="Pick Owner",
 )
-st.plotly_chart(fig, use_container_width=True)
-print(bar_data)
+st.plotly_chart(bar_fig, use_container_width=True)
+# Scatter Plot Start
+scatter_data = (
+    working_data[(~working_data["Pick Lost"]) & (working_data["Pick Round"] < 8)]
+    .groupby(["Season", "Pick Round", "Pick Owner"])
+    .count()
+    .reset_index()
+)
+scatter_data.rename({"Original Owner": "# of Picks"}, axis=1, inplace=True)
+
+
+#####Pie Chart Start ####
+st.header("Picks By Round")
+round_select = st.slider("Round", 1, 8, 1)
+pie_data = (
+    working_data[
+        (~working_data["Pick Lost"]) & (working_data["Pick Round"] == round_select)
+    ]
+    .groupby(["Pick Round", "Pick Owner"])
+    .count()
+    .reset_index()
+)
+pie_data.rename({"Original Owner": "# of Picks"}, axis=1, inplace=True)
+pie_fig = px.pie(data_frame=pie_data, values="# of Picks", names="Pick Owner")
+st.plotly_chart(pie_fig, use_container_width=True)
 
 
 print(options)
