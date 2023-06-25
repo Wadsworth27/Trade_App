@@ -47,7 +47,8 @@ with st.sidebar:
     )
     st.header("Year Select")
     min_year_filter, max_year_filter = st.slider("Year", 2023, 2030, (2023, 2025))
-st.subheader("All Picks in Range")
+st.subheader(f"Diplaying All Picks From {min_year_filter} to {max_year_filter}")
+st.info("Use the sidebar to change year range and players displayed")
 working_data = data.loc[
     (data["Season"] >= min_year_filter)
     & (data["Season"] <= max_year_filter)
@@ -73,6 +74,9 @@ st.plotly_chart(bar_fig, use_container_width=True)
 st.divider()
 ####Value Subburst####
 st.header("Pick Values By Season")
+st.info(
+    "Picks are scored as 1000 for 1st, 350 for 2nd, 125 for 3rd etc. and adjusted for last years finishing position. Further out picks are discounted 10% a year."
+)
 sunburst_data = (
     working_data[(~working_data["Pick Lost"]) & (working_data["Pick Round"] < 8)]
     .groupby(["Season", "Pick Owner"])
@@ -84,7 +88,7 @@ sunburst_fig = px.sunburst(
     sunburst_data,
     path=["Pick Owner", "Season"],
     values="Pick Value",
-    height=1000,
+    height=750,
     hover_data="Pick Value",
 )
 st.plotly_chart(sunburst_fig, use_container_width=True)
@@ -117,6 +121,7 @@ pie_data = (
 
 pie_data.rename({"Original Owner": "# of Picks"}, axis=1, inplace=True)
 pie_fig = px.pie(data_frame=pie_data, values="# of Picks", names="Pick Owner")
+pie_fig.update_traces(textinfo="value")
 st.plotly_chart(pie_fig, use_container_width=True)
 
 
