@@ -38,10 +38,10 @@ data = load_data()
 st.title("Chad's SOTH Trade App")
 
 min_year_filter, max_year_filter = st.slider("Year", 2023, 2050, (2023, 2027))
-
 with st.sidebar:
+    st.header("Player Select")
     options = st.multiselect(
-        "Player Select:",
+        "# Player Select:",
         options=data["Original Owner"].unique(),
         default=data["Original Owner"].unique(),
     )
