@@ -48,7 +48,9 @@ with st.sidebar:
     st.header("Year Select")
     min_year_filter, max_year_filter = st.slider("Year", 2023, 2030, (2023, 2025))
 st.subheader(f"Diplaying All Picks From {min_year_filter} to {max_year_filter}")
-st.info("Use the sidebar to change year range and players displayed")
+st.info(
+    "Use the sidebar to change year range and players displayed. Click into any chart and return to original state with a double click."
+)
 working_data = data.loc[
     (data["Season"] >= min_year_filter)
     & (data["Season"] <= max_year_filter)
